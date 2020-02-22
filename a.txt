@@ -1,0 +1,5 @@
+
+    struct RetVal {
+        uint16 typ;
+        uint160 data;
+    }
