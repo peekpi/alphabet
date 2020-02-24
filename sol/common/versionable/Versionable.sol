@@ -1,3 +1,4 @@
+pragma solidity ^0.5.0;
 contract Versionable {
 
     string public initVersion = "1.0.1";//do not modify

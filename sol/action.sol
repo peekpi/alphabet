@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "./common/random/rand.sol";
 import "./common/ownership/Ownable.sol";
+import "./common/delegatecallable/Delegatecallable.sol";
 
 interface ItemBase {
     function ActionHandler(uint256 en, uint256 r) external returns(uint256);
@@ -95,12 +96,27 @@ contract Person is ItemBase {
     }
 }
 
-contract Main is ActionBase,random,Ownable {
+contract CommonImpl is random,Ownable,RouteProxy {
+    constructor() Ownable() public {
+
+    }
+    function ChangeLogicAddress(address addr) public onlyOwner {
+        changeLogicAddress(addr);
+    }
+    function AddRoute(address route) external onlyOwner {
+        addRoute(route);
+    }
+    function FeedHash(uint256 number, uint256 _hash) external onlyOwner {
+        feedHash(number, _hash);
+    }
+}
+
+contract Main is ActionBase,CommonImpl {
     using CommonBase for CommonBase.Action;
     using CommonBase for CommonBase.RetVal;
     using CommonBase for uint256;
 
-    constructor() Ownable() public {
+    constructor() CommonImpl() public {
 
     }
 
@@ -116,13 +132,25 @@ contract Main is ActionBase,random,Ownable {
     }
 
     function exec(uint16 index) public {
+        deal();
         Person p = Person(address(items[index]));
         CommonBase.RetVal memory ret = p.newPeople().RetvalDecode();
         doRet(ret, index);
     }
 
+    function execCommon(uint16 index, bytes memory callData) public payable {
+        (bool ok,bytes memory rb) = address(items[index]).call.value(msg.value)(callData);
+        if (!ok) {
+            revert(string(rb));
+        }
+        CommonBase.RetVal memory retval = abi.decode(rb, (uint256)).RetvalDecode();
+        doRet(retval, index);
+    }
+
     function deal() public {
+        if (acEmpty()) return;
         CommonBase.Action memory ac = getAction();
+        if(ac.blockNo == block.number) return;
         CommonBase.RetVal memory ret = items[ac.itemNo - 1].ActionHandler(ac.ActionEncode(), rand32(ac.blockNo)).RetvalDecode();
         doRet(ret, ac.itemNo);
     }

@@ -1,12 +1,14 @@
 pragma solidity ^0.5.0;
 
 contract random {
-    uint256 seed;
+    mapping(uint256=>uint256) private seeds;
     mapping(uint256=>bytes32) public Hashes;
 
-    function FeedHashes(uint256 number, uint256 _hash) external onlyOwner {
+    function feedHash(uint256 number, uint256 _hash) internal {
         Hashes[number] = bytes32(_hash);
     }
+
+    function FeedHash(uint256 number, uint256 _hash) external;
 
     function blockHashUnsafe(uint256 number) private view returns (bytes32 _hash){
         _hash = blockhash(number);
@@ -20,13 +22,16 @@ contract random {
     }
 
     function update(uint256 s) private pure returns(uint256) {
-        return s&0xffffffff;
+        return uint256(keccak256(abi.encodePacked(s)))&0xffffffff;
     }
-    function rand32(uint256 no) private returns(uint256)  {
-        if( no > (seed>>32))
-            seed = (no << 32) | update(uint256(blockHash(no)));
+    function rand32(uint256 no) internal returns(uint256)  {
+        uint256 seed = seeds[no];
+        if(seed == 0)
+            seed = uint256(blockHash(no))&0xffffffff;
         else
-            seed = (seed & (~uint256(0xffffffff))) | update(seed&0xffffffff);
-        return seed&0xffffffff;
+            seed = seed&0xffffffff;
+        seed = update(seed);
+        seeds[no] = (no << 32) | seed;
+        return seed;
     }
 }
