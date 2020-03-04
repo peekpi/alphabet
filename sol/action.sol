@@ -9,6 +9,10 @@ interface ItemBase {
     function ActionHandler(uint256 en, uint256 r) external returns(uint256);
 }
 
+interface PushCardInterface {
+    function pushCard() external payable returns(uint256);
+}
+
 library CommonBase {
     struct Action {
         uint32 playerNo; // u32
@@ -49,7 +53,7 @@ contract ActionBase {
     uint256 public nextAction;
     uint256[] public actions;
 
-    function playerInit(address player) private {
+    function playerInit(address player) internal {
         if (playerIndex[player] == 0){
             players.push(player);
             playerIndex[player] = players.length;
@@ -80,26 +84,9 @@ contract ActionBase {
     }
 }
 
-contract Person is ItemBase {
-    using CommonBase for CommonBase.Action;
-    using CommonBase for CommonBase.RetVal;
-    using CommonBase for uint256;
-    uint256[] public humans;
-    function newPeople() public returns(uint256) {
-        humans.push(0);
-        return CommonBase.newRetVal(0, uint160(humans.length-1)).RetvalEncode();
-    }
-    function ActionHandler(uint256 en, uint256 r) external returns(uint256) {
-        CommonBase.Action memory ac = CommonBase.ActionDecode(en);
-        humans[ac.data] = r;
-        return 0;
-    }
-}
-
 contract CommonImpl is random,Ownable,RouteProxy {
-    constructor() Ownable() public {
+    constructor() Ownable(msg.sender) public {}
 
-    }
     function ChangeLogicAddress(address addr) public onlyOwner {
         changeLogicAddress(addr);
     }
@@ -111,14 +98,14 @@ contract CommonImpl is random,Ownable,RouteProxy {
     }
 }
 
+
+
 contract Main is ActionBase,CommonImpl {
     using CommonBase for CommonBase.Action;
     using CommonBase for CommonBase.RetVal;
     using CommonBase for uint256;
 
-    constructor() CommonImpl() public {
-
-    }
+    constructor() CommonImpl() public {}
 
     function addItem(ItemBase _item) public onlyOwner {
         require(itemIndex[address(_item)] > 0, "exist");
@@ -133,18 +120,9 @@ contract Main is ActionBase,CommonImpl {
 
     function exec(uint16 index) public {
         deal();
-        Person p = Person(address(items[index]));
-        CommonBase.RetVal memory ret = p.newPeople().RetvalDecode();
+        playerInit(msg.sender);
+        CommonBase.RetVal memory ret = PushCardInterface(address(items[index])).pushCard().RetvalDecode();
         doRet(ret, index);
-    }
-
-    function execCommon(uint16 index, bytes memory callData) public payable {
-        (bool ok,bytes memory rb) = address(items[index]).call.value(msg.value)(callData);
-        if (!ok) {
-            revert(string(rb));
-        }
-        CommonBase.RetVal memory retval = abi.decode(rb, (uint256)).RetvalDecode();
-        doRet(retval, index);
     }
 
     function deal() public {

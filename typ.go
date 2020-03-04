@@ -101,6 +101,11 @@ type solStruct struct {
 	val  []string
 }
 
+var typSize = map[string]int{
+	"address": 160,
+	//	"bool":    1, // 'bool' can't conversion to 'uint'
+}
+
 func newSolStruct(in *input) *solStruct {
 	sol := &solStruct{}
 	in.expectToken("struct")
@@ -111,14 +116,20 @@ func newSolStruct(in *input) *solStruct {
 			break
 		}
 		sol.typ = append(sol.typ, str)
-		sol.val = append(sol.val, in.next())
-		size, err := strconv.Atoi(string(str[4:]))
-		if str == "address" {
-			size = 160
-			err = nil
+		val := in.next()
+		if val == "payable" {
+			if str != "address" {
+				panic("payable only follow by address")
+			}
+			val = in.next()
 		}
-		if err != nil {
-			panic(err)
+		sol.val = append(sol.val, val)
+		size, exist := typSize[str]
+		if !exist {
+			var err error
+			if size, err = strconv.Atoi(string(str[4:])); err != nil {
+				panic(err)
+			}
 		}
 		sol.size = append(sol.size, size)
 	}
