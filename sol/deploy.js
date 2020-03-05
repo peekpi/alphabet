@@ -73,10 +73,10 @@ async function main(){
     contractMap = parseCombinedJson(process.argv[2])
     mainEntry = contractMap['action.sol:Main']
     mainEntryDeploy = await deploy_contract(mainEntry, [])
-    D(mainEntryDeploy.address, tronWeb.address.fromHex(mainEntryDeploy.address))
+    D("mainEntry:", mainEntryDeploy.address, tronWeb.address.fromHex(mainEntryDeploy.address))
     pushCard = contractMap['PushCard.sol:PushCard']
     pushCardDeploy = await deploy_contract(pushCard, [mainEntryDeploy.address])
-    D(pushCardDeploy.address, tronWeb.address.fromHex(pushCardDeploy.address))
+    D("pushCard:", pushCardDeploy.address, tronWeb.address.fromHex(pushCardDeploy.address))
     tx = mainEntryDeploy.addItem(pushCardDeploy.address)
     ret = await sendTx(tx)
     D(ret)

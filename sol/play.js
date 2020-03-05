@@ -56,19 +56,20 @@ async function main() {
     let contractMap = parseCombinedJson(process.argv[2])
     let mainEntry = contractMap['action.sol:Main']
     let pushCard = contractMap['PushCard.sol:PushCard']
-    let mainEntryDeploy = localContract(mainEntry.abi, "TPRbikLudhLW8XkLsTZcPrJmvQc5s3op7Q")
-    let pushCardDeploy = localContract(pushCard.abi, "TApdL8pwzxFLV6Wys8Qhc8hmp2msAkNTL7")
+    let mainEntryDeploy = localContract(mainEntry.abi, "TD9ZZWubRBjiT4dcctmwLf6cNa1WmEsNk8")
+    let pushCardDeploy = localContract(pushCard.abi, "TRS26uhSUh67zeTCMZXRYck4sXmqpey2Hu")
     //pushCardDeploy = await getContract("TKyW3nNtE8TDzbSF3a1PF8F4fBn2EpjcFf")
     let tx = mainEntryDeploy.pushCard(0)
     let lastInit = 0;
     let cards = [];
-    let benefit = 0;
+    let benefit = await pushCardDeploy.benefit().call()
     for (i = 0; i < 512; i++) {
         await sendTx(tx, trx=10)
         let cardsLength = await pushCardDeploy.cardsLength().call()
         let index
         if(lastInit > cardsLength){
-            D("win!")
+            benefit = await pushCardDeploy.benefit().call()
+            D("win!", benefit)
             await sendTx(mainEntryDeploy.deal())
             break;
         }
@@ -88,7 +89,6 @@ async function main() {
         }
 
         balance = await pushCardDeploy.balanceTRX().call()
-        benefit = 0;//await pushCardDeploy.benefit().call()
         D("------", i, Int(balance), Int(benefit), Int(cardsLength))
         for (j = 0; j < cardsLength; j++) {
             cardinfo = cards[j]
