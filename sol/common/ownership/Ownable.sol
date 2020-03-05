@@ -57,3 +57,13 @@ contract Ownable {
         selfdestruct(owner);
     }
 }
+
+contract Indirect {
+    address public indirect;
+
+    constructor(address _indirect) public {
+        indirect = _indirect;
+    }
+
+    modifier onlyIndirect(){require(msg.sender == indirect, "onlyIndirect");_;}
+}

@@ -108,7 +108,7 @@ contract Main is ActionBase,CommonImpl {
     constructor() CommonImpl() public {}
 
     function addItem(ItemBase _item) public onlyOwner {
-        require(itemIndex[address(_item)] > 0, "exist");
+        require(itemIndex[address(_item)] == 0, "exist");
         items.push(_item);
         itemIndex[address(_item)] = items.length;
     }
@@ -118,10 +118,10 @@ contract Main is ActionBase,CommonImpl {
             pushAction(0, index, ret.data);
     }
 
-    function exec(uint16 index) public {
+    function pushCard(uint16 index) public payable {
         deal();
         playerInit(msg.sender);
-        CommonBase.RetVal memory ret = PushCardInterface(address(items[index])).pushCard().RetvalDecode();
+        CommonBase.RetVal memory ret = PushCardInterface(address(items[index])).pushCard.value(msg.value)().RetvalDecode();
         doRet(ret, index);
     }
 
@@ -129,7 +129,7 @@ contract Main is ActionBase,CommonImpl {
         if (acEmpty()) return;
         CommonBase.Action memory ac = getAction();
         if(ac.blockNo == block.number) return;
-        CommonBase.RetVal memory ret = items[ac.itemNo - 1].ActionHandler(ac.ActionEncode(), rand32(ac.blockNo)).RetvalDecode();
+        CommonBase.RetVal memory ret = items[ac.itemNo].ActionHandler(ac.ActionEncode(), rand32(ac.blockNo)).RetvalDecode();
         doRet(ret, ac.itemNo);
     }
 }

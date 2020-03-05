@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"os"
 	"strconv"
 )
@@ -140,6 +141,8 @@ var enFuncFmt = "function %sEncode(%s memory s) internal pure returns(uint256) {
 
 var deFuncFmt = "function %sDecode(uint256 en) internal pure returns(%s memory) {return %s(%s);}"
 
+var deFuncJsFmt = "function %sDecode(en){en=BigInt(en);return {%s};}"
+
 func (sol *solStruct) enStr() string {
 	str := ""
 	total := 0
@@ -176,10 +179,33 @@ func (sol *solStruct) deStr() string {
 	return str
 }
 
+func (sol *solStruct) deStrJs() string {
+	str := ""
+	total := 0
+	one := big.NewInt(1)
+	for i, size := range sol.size {
+		if i > 0 {
+			str += ","
+		}
+		bsize := new(big.Int)
+		bsize.Lsh(one, uint(size)).Sub(bsize, one)
+		if total > 0 {
+			str += fmt.Sprintf("%s:'0x'+((en>>BigInt('%d'))&BigInt('0x%s')).toString(16)", sol.val[i], total, bsize.Text(16))
+		} else {
+			str += fmt.Sprintf("%s:'0x'+(en&BigInt('0x%s')).toString(16)", sol.val[i], bsize.Text(16))
+		}
+		total += size
+	}
+	return str
+}
+
 func (sol *solStruct) serialization() string {
 	str := fmt.Sprintf(enFuncFmt, sol.name, sol.name, sol.enStr())
 	str += "\n"
 	str += fmt.Sprintf(deFuncFmt, sol.name, sol.name, sol.name, sol.deStr())
+	str += "\n"
+	str += "\n"
+	str += fmt.Sprintf(deFuncJsFmt, sol.name, sol.deStrJs())
 	return str
 }
 
