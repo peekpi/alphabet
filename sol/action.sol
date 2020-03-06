@@ -76,7 +76,11 @@ contract ActionBase {
         actions.push(CommonBase.ActionEncode(ac));
     }
     function getAction() internal returns(CommonBase.Action memory ac) {
-        return CommonBase.ActionDecode(actions[nextAction++]);
+        return CommonBase.ActionDecode(actions[nextAction]);
+    }
+
+    function consumeAction() private {
+        nextAction++;
     }
 
     function acEmpty() internal view returns(bool) {
@@ -129,6 +133,7 @@ contract Main is ActionBase,CommonImpl {
         if (acEmpty()) return;
         CommonBase.Action memory ac = getAction();
         if(ac.blockNo == block.number) return;
+        consumeAction();
         CommonBase.RetVal memory ret = items[ac.itemNo].ActionHandler(ac.ActionEncode(), rand32(ac.blockNo)).RetvalDecode();
         doRet(ret, ac.itemNo);
     }

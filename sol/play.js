@@ -51,6 +51,29 @@ function sendTx(txobj, trx = 0, fee = 2, sync = true) {
     });
 }
 
+function winSearch(cards) {
+    winCard = cards[cards.length-1]
+    winValue = winCard.betValue;
+    let i
+    for(i = cards.length-1; i > 0; i--){
+        curCard = cards[i]
+        winValue += curCard.betValue
+        if(curCard.cardNo == winCard.cardNo)
+            break;
+    }
+    return {
+        benefit: Int(winValue*0.1),
+        start: {
+            index: i,
+            winValue: winValue*0.45
+        },
+        end: {
+            index: cards.length-1,
+            winValue: winValue*0.45
+        }
+    }
+}
+
 function CardInfoDecode(en){en=BigInt(en);return {player:'0x'+(en&BigInt('0xffffffffffffffffffffffffffffffffffffffff')).toString(16),betNo:'0x'+((en>>BigInt('160'))&BigInt('0xffffffff')).toString(16),betValue:'0x'+((en>>BigInt('192'))&BigInt('0xffffffff')).toString(16),cardNo:'0x'+((en>>BigInt('224'))&BigInt('0xff')).toString(16),isInit:'0x'+((en>>BigInt('232'))&BigInt('0xff')).toString(16)};}
 async function main() {
     let contractMap = parseCombinedJson(process.argv[2])
@@ -65,6 +88,7 @@ async function main() {
     let benefit = await pushCardDeploy.benefit().call()
     for (i = 0; i < 512; i++) {
         await sendTx(tx, trx=10)
+        continue
         let cardsLength = await pushCardDeploy.cardsLength().call()
         let index
         if(lastInit > cardsLength){
