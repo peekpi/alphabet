@@ -75,11 +75,11 @@ contract ActionBase {
         ac = CommonBase.newAction(uint32(getPlayerIndex(msg.sender)), typ, itemNo, data);
         actions.push(CommonBase.ActionEncode(ac));
     }
-    function getAction() internal returns(CommonBase.Action memory ac) {
+    function getAction() internal view returns(CommonBase.Action memory ac) {
         return CommonBase.ActionDecode(actions[nextAction]);
     }
 
-    function consumeAction() private {
+    function consumeAction() internal {
         nextAction++;
     }
 
@@ -101,8 +101,6 @@ contract CommonImpl is random,Ownable,RouteProxy {
         feedHash(number, _hash);
     }
 }
-
-
 
 contract Main is ActionBase,CommonImpl {
     using CommonBase for CommonBase.Action;

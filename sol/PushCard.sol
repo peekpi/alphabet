@@ -23,8 +23,9 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
     using Card for Card.CardInfo;
     using Card for uint256;
     uint256 public benefit;
+    mapping(uint256=>uint256) indexMap;
     uint256 public cardsLength;
-    uint256[257] public cards;
+    uint256[1024] public cards;
     constructor(Ownable entry) Ownable(entry.owner()) Indirect(address(entry)) public {}
     function pushCard() external payable onlyIndirect returns(uint256) {
         uint256 curLen = cardsLength;
@@ -51,23 +52,46 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
             if (c.cardNo == cardNo)
                 return (totalValue, end, c);
         }
-        return (0, 0x100, c);
+        return (0, 0xffffffff, c);
+    }
+
+    function moveCard(uint256 dest, uint256 src, uint256 length) private returns(uint256){
+        for(uint256 i = 0; i < length; i++) {
+            indexMap[src] = dest+1;
+            cards[dest++] = cards[src++];
+        }
+        return length;
+    }
+
+    function getIndex(uint256 index) private returns(uint256) {
+        while(true) {
+            uint256 mapIndex = indexMap[index];
+            if (mapIndex == 0)
+                return index;
+            //delete(indexMap[index]);
+            indexMap[index] = 0;
+            index = mapIndex - 1;
+        }
     }
 
     function ActionHandler(uint256 en, uint256 r) external onlyIndirect returns(uint256) {
         CommonBase.Action memory ac = CommonBase.ActionDecode(en);
-        uint256 index = uint256(ac.data);
+        uint256 index = getIndex(uint256(ac.data));
+
         Card.CardInfo memory c = cards[index].CardInfoDecode();
         uint8 cardNo = uint8(r);
+        c.cardNo = cardNo;
+        c.isInit = 1;
+        cards[index] = c.CardInfoEncode();
         (uint256 totalValue, uint256 si, Card.CardInfo memory sc) = winSearch(index, cardNo);
-        if (si == 0x100) {
-            c.cardNo = cardNo;
-            c.isInit = 1;
-            cards[index] = c.CardInfoEncode();
+        if (si == 0xffffffff)
             return 0;
-        }
         totalValue += c.betValue;
-        cardsLength = si;
+        uint256 unhandle = index + 1;
+        uint256 moveCount = cardsLength-unhandle;
+        if(moveCount > 0)
+            moveCard(si, unhandle, moveCount);
+        cardsLength = si + moveCount;
         dealTrx(c.player, sc.player, totalValue);
     }
 

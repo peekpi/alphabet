@@ -3,7 +3,9 @@ TronWeb = require('tronweb');
 fs = require('fs')
 
 File = (name) => fs.readFileSync(name)
+FileWrite = (file, data) => fs.writeFileSync(file, data)
 Json = JSON.parse;
+JsonDump = JSON.stringify;
 
 
 const shasta = '.shasta'
@@ -74,12 +76,19 @@ async function main(){
     mainEntry = contractMap['action.sol:Main']
     mainEntryDeploy = await deploy_contract(mainEntry, [])
     D("mainEntry:", mainEntryDeploy.address, tronWeb.address.fromHex(mainEntryDeploy.address))
+    D(await mainEntryDeploy.owner().call())
     pushCard = contractMap['PushCard.sol:PushCard']
     pushCardDeploy = await deploy_contract(pushCard, [mainEntryDeploy.address])
     D("pushCard:", pushCardDeploy.address, tronWeb.address.fromHex(pushCardDeploy.address))
     tx = mainEntryDeploy.addItem(pushCardDeploy.address)
     ret = await sendTx(tx)
     D(ret)
+    let jstr = JsonDump({
+        mainEntry:tronWeb.address.fromHex(mainEntryDeploy.address),
+        pushCard:tronWeb.address.fromHex(pushCardDeploy.address)
+    })
+    FileWrite('Contract.json', jstr);
+    FileWrite('../webpage/Contract.js', "cAddress="+jstr);
 }
 
 main();

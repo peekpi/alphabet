@@ -79,8 +79,9 @@ async function main() {
     let contractMap = parseCombinedJson(process.argv[2])
     let mainEntry = contractMap['action.sol:Main']
     let pushCard = contractMap['PushCard.sol:PushCard']
-    let mainEntryDeploy = localContract(mainEntry.abi, "TD9ZZWubRBjiT4dcctmwLf6cNa1WmEsNk8")
-    let pushCardDeploy = localContract(pushCard.abi, "TRS26uhSUh67zeTCMZXRYck4sXmqpey2Hu")
+    let cAddress = JsonFile("Contract.json")
+    let mainEntryDeploy = localContract(mainEntry.abi, cAddress.mainEntry)
+    let pushCardDeploy = localContract(pushCard.abi, cAddress.pushCard)
     //pushCardDeploy = await getContract("TKyW3nNtE8TDzbSF3a1PF8F4fBn2EpjcFf")
     let tx = mainEntryDeploy.pushCard(0)
     let lastInit = 0;
