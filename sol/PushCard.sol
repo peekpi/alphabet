@@ -1,4 +1,3 @@
-
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 import "./action.sol";
@@ -22,7 +21,7 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
     using CommonBase for uint256;
     using Card for Card.CardInfo;
     using Card for uint256;
-    event win(uint256 win1, uint256 win2, uint256 total);
+    event winner(uint256 win1, uint256 win2, uint256 total);
     uint256 public benefit;
     mapping(uint256=>uint256) indexMap;
     uint256 public cardsLength;
@@ -88,13 +87,13 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
         if (si == 0xffffffff)
             return 0;
         totalValue += c.betValue;
+        emit winner(cards[si], cards[index], totalValue);
         uint256 unhandle = index + 1;
         uint256 moveCount = cardsLength-unhandle;
         if(moveCount > 0)
             moveCard(si, unhandle, moveCount);
         cardsLength = si + moveCount;
         dealTrx(c.player, sc.player, totalValue);
-        emit win(cards[si], cards[index], totalValue);
     }
 
     function CardView(uint256 index) view public returns(Card.CardInfo memory) {
