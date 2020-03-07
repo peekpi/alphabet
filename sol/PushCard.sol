@@ -22,6 +22,7 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
     using CommonBase for uint256;
     using Card for Card.CardInfo;
     using Card for uint256;
+    event win(uint256 win1, uint256 win2, uint256 total);
     uint256 public benefit;
     mapping(uint256=>uint256) indexMap;
     uint256 public cardsLength;
@@ -93,6 +94,7 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
             moveCard(si, unhandle, moveCount);
         cardsLength = si + moveCount;
         dealTrx(c.player, sc.player, totalValue);
+        emit win(cards[si], cards[index], totalValue);
     }
 
     function CardView(uint256 index) view public returns(Card.CardInfo memory) {

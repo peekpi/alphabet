@@ -12,7 +12,7 @@ const shasta = '.shasta'
 const fullNode = `https://api${shasta}.trongrid.io`;
 const solidityNode = `https://api${shasta}.trongrid.io`;
 const eventServer = `https://api${shasta}.trongrid.io/`;
-const anyPrivate = '9ebd1d36e2123e7019bc2a98f1ad0c7cac8bdb9006cb93553c20e15b927b911f';
+const anyPrivate = File('.key');
 const bet16Address = 'TWE37uQa9gDkWnHN5SdZC9XsWCX2m8dwro';
 
 const tronWeb = new TronWeb(
