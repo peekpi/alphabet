@@ -86,9 +86,9 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
         cards[index] = c.CardInfoEncode();
         if(cardNo == 88){
             cardsLength = 0;
-            uint256 totalValue = address(this).balance-benefit;
+            uint256 totalValue = (address(this).balance-benefit) / (1 trx);
             emit winner(cards[index], cards[index], totalValue);
-            dealTrx(c, c, totalValue / (1 trx));
+            dealTrx(c, c, totalValue);
             return 0;
         }
         (uint256 totalValue, uint256 si, Card.CardInfo memory sc) = winSearch(index, cardNo);
