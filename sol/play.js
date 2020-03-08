@@ -88,7 +88,7 @@ async function main() {
     let cards = [];
     let benefit = await pushCardDeploy.benefit().call()
     for (i = 0; i < 512; i++) {
-        await sendTx(tx, trx=10)
+        await sendTx(tx, trx=20)
         continue
         let cardsLength = await pushCardDeploy.cardsLength().call()
         let index

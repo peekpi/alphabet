@@ -76,12 +76,12 @@ async function main(){
     mainEntry = contractMap['action.sol:Main']
     mainEntryDeploy = await deploy_contract(mainEntry, [])
     D("mainEntry:", mainEntryDeploy.address, tronWeb.address.fromHex(mainEntryDeploy.address))
-    await sleep(2000);
+    await sleep(3000);
     D(await mainEntryDeploy.owner().call())
     pushCard = contractMap['PushCard.sol:PushCard']
     pushCardDeploy = await deploy_contract(pushCard, [mainEntryDeploy.address])
     D("pushCard:", pushCardDeploy.address, tronWeb.address.fromHex(pushCardDeploy.address))
-    await sleep(2000);
+    await sleep(3000);
     tx = mainEntryDeploy.addItem(pushCardDeploy.address)
     ret = await sendTx(tx)
     D(ret)

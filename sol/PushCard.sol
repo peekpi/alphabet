@@ -28,20 +28,21 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
     uint256[1024] public cards;
     constructor(Ownable entry) Ownable(entry.owner()) Indirect(address(entry)) public {}
     function pushCard() external payable onlyIndirect returns(uint256) {
+        require(msg.value >= (20 trx), "must >= 20trx");
         uint256 curLen = cardsLength;
-        cards[curLen] = Card.CardInfo(tx.origin, uint32(block.number), uint32(msg.value/1e6), 0, 0).CardInfoEncode();
+        cards[curLen] = Card.CardInfo(tx.origin, uint32(block.number), uint32(msg.value/1 trx), 0, 0).CardInfoEncode();
         cardsLength = curLen + 1;
         return CommonBase.newRetVal(1, uint160(curLen)).RetvalEncode();
     }
 
-    function dealTrx(address payable p1, address payable p2, uint256 trxAmount) private {
-        uint256 sunAmount = trxAmount*1e6;
+    function dealTrx(Card.CardInfo memory p1, Card.CardInfo memory p2, uint256 trxAmount) private {
+        uint256 sunAmount = trxAmount * (1 trx);
         uint256 _benefit = sunAmount/10;
         benefit += _benefit;
         sunAmount -= _benefit;
-        sunAmount/=2;
-        p1.transfer(sunAmount);
-        p2.transfer(sunAmount);
+        uint256 win1 = trxAmount*p1.betValue/(p1.betValue+p2.betValue);
+        p1.player.transfer(win1);
+        p2.player.transfer(sunAmount-win1);
     }
 
     function winSearch(uint256 end, uint8 cardNo) private view returns(uint256, uint256, Card.CardInfo memory c) {
@@ -83,6 +84,13 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
         c.cardNo = cardNo;
         c.isInit = 1;
         cards[index] = c.CardInfoEncode();
+        if(cardNo == 88){
+            cardsLength = 0;
+            uint256 totalValue = address(this).balance-benefit;
+            emit winner(cards[index], cards[index], totalValue);
+            dealTrx(c, c, totalValue / (1 trx));
+            return 0;
+        }
         (uint256 totalValue, uint256 si, Card.CardInfo memory sc) = winSearch(index, cardNo);
         if (si == 0xffffffff)
             return 0;
@@ -93,7 +101,8 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
         if(moveCount > 0)
             moveCard(si, unhandle, moveCount);
         cardsLength = si + moveCount;
-        dealTrx(c.player, sc.player, totalValue);
+        dealTrx(c, sc, totalValue);
+        return 0;
     }
 
     function CardView(uint256 index) view public returns(Card.CardInfo memory) {
