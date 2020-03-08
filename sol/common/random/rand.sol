@@ -22,16 +22,14 @@ contract random {
     }
 
     function update(uint256 s) private pure returns(uint256) {
-        return uint256(keccak256(abi.encodePacked(s)))&0xffffffff;
+        return uint256(keccak256(abi.encodePacked(s)));
     }
     function rand32(uint256 no) internal returns(uint256)  {
         uint256 seed = seeds[no];
         if(seed == 0)
-            seed = uint256(blockHash(no))&0xffffffff;
-        else
-            seed = seed&0xffffffff;
-        seed = update(seed);
-        seeds[no] = (no << 32) | seed;
+            seed = uint256(blockHash(no));
+        seed = update((no << 224) | seed);
+        seeds[no] = seed;
         return seed;
     }
 }
