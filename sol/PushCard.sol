@@ -45,9 +45,18 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
         p2.player.transfer(sunAmount-win1);
     }
 
+    function winSearch88(uint256 start, uint256 end) private view returns(uint256 totalValue) {
+        while(end --> start) {
+            Card.CardInfo memory c = cards[end].CardInfoDecode();
+            totalValue += c.betValue;
+        }
+        totalValue = (address(this).balance - benefit)/(1 trx) - totalValue;
+        return totalValue;
+    }
+
     function winSearch(uint256 end, uint8 cardNo) private view returns(uint256, uint256, Card.CardInfo memory c) {
         uint256 totalValue = 0;
-        while(end-- > 0) {
+        while(end --> 0) {
             c = cards[end].CardInfoDecode();
             totalValue += c.betValue;
             if (c.cardNo == cardNo)
@@ -84,19 +93,22 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
         c.cardNo = cardNo;
         c.isInit = 1;
         cards[index] = c.CardInfoEncode();
-        if(cardNo == 88){
-            cardsLength = 0;
-            uint256 totalValue = (address(this).balance-benefit) / (1 trx);
-            emit winner(cards[index], cards[index], totalValue);
-            dealTrx(c, c, totalValue);
-            return 0;
-        }
-        (uint256 totalValue, uint256 si, Card.CardInfo memory sc) = winSearch(index, cardNo);
-        if (si == 0xffffffff)
-            return 0;
-        totalValue += c.betValue;
-        emit winner(cards[si], cards[index], totalValue);
+        uint256 totalValue;
+        uint256 si;
         uint256 unhandle = index + 1;
+        Card.CardInfo memory sc;
+        if(cardNo == 88) {
+            totalValue = winSearch88(unhandle, cardsLength);
+            si = 0;
+            sc = c;
+            emit winner(cards[index], cards[index], totalValue);
+        }else{
+            (totalValue, si, sc) = winSearch(index, cardNo);
+            if (si == 0xffffffff)
+                return 0;
+            totalValue += c.betValue;
+            emit winner(cards[si], cards[index], totalValue);
+        }
         uint256 moveCount = cardsLength-unhandle;
         if(moveCount > 0)
             moveCard(si, unhandle, moveCount);
