@@ -9,10 +9,11 @@ library Card {
         uint32 betNo;
         uint32 betValue;
         uint8 cardNo;
+        uint16 index;
         uint8 isInit;
     }
-    function CardInfoEncode(CardInfo memory s) internal pure returns(uint256) {return uint256(s.player)|uint256(s.betNo)<<160|uint256(s.betValue)<<192|uint256(s.cardNo)<<224|uint256(s.isInit)<<232;}
-    function CardInfoDecode(uint256 en) internal pure returns(CardInfo memory) {return CardInfo(address(en),uint32(en>>160),uint32(en>>192),uint8(en>>224),uint8(en>>232));}
+function CardInfoEncode(CardInfo memory s) internal pure returns(uint256) {return uint256(s.player)|uint256(s.betNo)<<160|uint256(s.betValue)<<192|uint256(s.cardNo)<<224|uint256(s.index)<<232|uint256(s.isInit)<<248;}
+function CardInfoDecode(uint256 en) internal pure returns(CardInfo memory) {return CardInfo(address(en),uint32(en>>160),uint32(en>>192),uint8(en>>224),uint16(en>>232),uint8(en>>248));}
 }
 
 contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
@@ -22,6 +23,7 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
     using Card for Card.CardInfo;
     using Card for uint256;
     event winner(uint256 win1, uint256 win2, uint256 total);
+    event card(uint256 carden);
     uint256 public benefit;
     mapping(uint256=>uint256) indexMap;
     uint256 public cardsLength;
@@ -30,7 +32,7 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
     function pushCard() external payable onlyIndirect returns(uint256) {
         require(msg.value >= (20 trx), "must >= 20trx");
         uint256 curLen = cardsLength;
-        cards[curLen] = Card.CardInfo(tx.origin, uint32(block.number), uint32(msg.value/1 trx), 0, 0).CardInfoEncode();
+        cards[curLen] = Card.CardInfo(tx.origin, uint32(block.number), uint32(msg.value/1 trx), 0, 0, 0).CardInfoEncode();
         cardsLength = curLen + 1;
         return CommonBase.newRetVal(1, uint160(curLen)).RetvalEncode();
     }
@@ -92,7 +94,9 @@ contract PushCard is ItemBase,PushCardInterface,Ownable,Indirect {
         uint8 cardNo = uint8(r);
         c.cardNo = cardNo;
         c.isInit = 1;
+        c.index = uint16(index);
         cards[index] = c.CardInfoEncode();
+        emit card(cards[index]);
         uint256 totalValue;
         uint256 si;
         uint256 unhandle = index + 1;

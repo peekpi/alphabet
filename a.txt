@@ -1,7 +1,0 @@
-    struct CardInfo {
-        address payable player;
-        uint32 betNo;
-        uint32 betValue;
-        uint8 cardNo;
-        uint8 isInit;
-    }
